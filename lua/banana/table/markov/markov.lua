@@ -27,6 +27,11 @@ function MarkovChain:Learn(sentence)
             self.firstWordFrequencies[word] = self.firstWordFrequencies[word] + 1
         end
     end
+
+    local oneWordLessSentence = sentence:match("%S+%s+(.+)")
+    if oneWordLessSentence and (oneWordLessSentence ~= "") then
+        self:Learn(oneWordLessSentence)
+    end
 end
 
 function MarkovChain:GetRandomFirstWord()
@@ -38,6 +43,22 @@ function MarkovChain:GetRandomFirstWord()
     end
 
     return false
+end
+
+function MarkovChain:resetWordChain(wordChain)
+    local newWordChain = {}
+
+    for i,word in ipairs(wordChain) do
+        if i == 1 then
+            newWordChain[1] = self.firstWordsLookup[wordChain[1]:GetString()]
+        else
+            newWordChain[#newWordChain+1] = newWordChain[#newWordChain]:GetChild(wordChain[i]:GetString())
+        end
+    end
+
+    table.remove(newWordChain,1)
+
+    return newWordChain
 end
 
 function MarkovChain:Generate(start,maxLength,depth)
@@ -64,7 +85,7 @@ function MarkovChain:Generate(start,maxLength,depth)
             end
 
             if #wordChain > (depth or 2) then
-                table.remove(wordChain,1)
+                wordChain = self:resetWordChain(wordChain)
             end
         end
     else
@@ -82,8 +103,8 @@ function MarkovChain:Generate(start,maxLength,depth)
             break
         end
 
-        if #wordChain > (depth or 2) then
-            table.remove(wordChain,1)
+        if #wordChain >= (depth or 2) then
+            wordChain = self:resetWordChain(wordChain)
         end
 
         if maxLength and (#outputChain >= maxLength) then
