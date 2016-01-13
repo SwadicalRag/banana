@@ -58,8 +58,11 @@ function banana.New(name)
             else
                 return "Class Instance "..name
             end
-        end
+        end,
+        __gc = instance.__gc
     })
+
+    if instance.__ctor then instance:__ctor() end
 
     return instance
 end

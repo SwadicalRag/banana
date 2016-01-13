@@ -1,16 +1,18 @@
 local Logger = banana.Define("Logger"):Extends("OutputWriter")
 
-Logger.TAG = "LoggerBase"
-Logger.CPUTimer = banana.New "CPUTimer"
-Logger.StartTime = Logger.CPUTimer:GetTime()
+function Logger:__ctor()
+    self.TAG = "LoggerBase"
+    self.CPUTimer = banana.New "CPUTimer"
+    self.StartTime = self.CPUTimer:GetTime()
 
-Logger.colors = {
-    red = Color and Color(255,0,0),
-    green = Color and Color(0,255,0),
-    blue = Color and Color(0,0,255),
-    yellow = Color and Color(0,255,255),
-    white = Color and Color(255,255,255)
-}
+    self.colors = {
+        red = Color and Color(255,0,0),
+        green = Color and Color(0,255,0),
+        blue = Color and Color(0,0,255),
+        yellow = Color and Color(0,255,255),
+        white = Color and Color(255,255,255)
+    }
+end
 
 function Logger:SetTag(tag)
     self.TAG = tag
