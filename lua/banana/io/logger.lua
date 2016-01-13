@@ -22,30 +22,34 @@ function Logger:GetTimeDelta()
     return self.CPUTimer:GetTime() - self.StartTime
 end
 
+function Logger:WriteTag(col)
+    self:WriteColor(col,"[")
+    self:WriteColor(col,self.TAG)
+    self:WriteColor(col,"] ")
+end
+
+function Logger:WriteTimeStamp(col)
+    self:WriteColorFormat(col,"[T+%02.03fs] ",self:GetTimeDelta())
+end
+
 function Logger:Log(...)
-    self:WriteColor(self.colors.green,"[")
-    self:WriteColor(self.colors.green,self.TAG)
-    self:WriteColor(self.colors.green,"] ")
+    self:WriteTag(self.colors.green)
     self:WriteColor(self.colors.green,"[OUT] ")
-    self:WriteColorFormat(self.colors.green,"[T+%02.03fs] ",self:GetTimeDelta())
+    self:WriteTimeStamp(self.colors.green)
     self:WriteColorN(self.colors.white,...)
 end
 
 function Logger:LogDebug(...)
-    self:WriteColor(self.colors.yellow,"[")
-    self:WriteColor(self.colors.yellow,self.TAG)
-    self:WriteColor(self.colors.yellow,"] ")
+    self:WriteTag(self.colors.yellow)
     self:WriteColor(self.colors.yellow,"[DBG] ")
-    self:WriteColorFormat(self.colors.yellow,"[%02.03f] ",self:GetTimeDelta())
+    self:WriteTimeStamp(self.colors.yellow)
     self:WriteColorN(self.colors.white,...)
 end
 
 function Logger:LogError(...)
-    self:WriteColor(self.colors.red,"[")
-    self:WriteColor(self.colors.red,self.TAG)
-    self:WriteColor(self.colors.red,"] ")
+    self:WriteTag(self.colors.red)
     self:WriteColor(self.colors.red,"[ERR] ")
-    self:WriteColorFormat(self.colors.red,"[%02.03f] ",self:GetTimeDelta())
+    self:WriteTimeStamp(self.colors.red)
     self:WriteColorN(self.colors.white,...)
 end
 
