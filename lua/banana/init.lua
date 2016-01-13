@@ -13,8 +13,22 @@ banana.isGMod = gmod and true
 include("/banana/timer/cpu.lua")
 include("/banana/io/outputwriter.lua")
 include("/banana/io/logger.lua")
+include("/banana/lua/loader.lua")
 
-banana.Logger = banana.New "Logger"
+banana.Logger = banana.New("Logger")
 banana.Logger:SetTag("banana")
 
 banana.Logger:Log("Initialising...")
+
+banana.Loader = banana.New("Loader")
+banana.Loader:SetTag("bananaLoader")
+
+banana.Loader:SetLoaded("/banana/banana.lua",true)
+banana.Loader:SetLoaded("/banana/init.lua",true)
+banana.Loader:SetLoaded("/banana/timer/cpu.lua",true)
+banana.Loader:SetLoaded("/banana/io/outputwriter.lua",true)
+banana.Loader:SetLoaded("/banana/io/logger.lua",true)
+banana.Loader:SetLoaded("/banana/lua/loader.lua",true)
+banana.Loader:LoadFolderRecursive("/banana/")
+
+banana.Logger:Log("banana has successfully been planted!")

@@ -59,12 +59,15 @@ function banana.New(name)
                 return "Class Instance "..name
             end
         end,
-        __gc = instance.__gc
+        __gc = instance.__gc,
+        __concat = instance.__concat
     })
 
     if instance.__ctor then instance:__ctor() end
 
     return instance
 end
+
+banana.Clone = copy
 
 return banana

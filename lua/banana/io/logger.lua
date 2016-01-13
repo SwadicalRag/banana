@@ -9,7 +9,7 @@ function Logger:__ctor()
         red = Color and Color(255,0,0),
         green = Color and Color(0,255,0),
         blue = Color and Color(0,0,255),
-        yellow = Color and Color(0,255,255),
+        yellow = Color and Color(255,255,0),
         white = Color and Color(255,255,255)
     }
 end
