@@ -1,4 +1,4 @@
-local OutputWriter = namespace.Define("OutputWriter")
+local OutputWriter = banana.Define("OutputWriter")
 
 function OutputWriter:Write(...)
     if banana.isGMod then
@@ -10,6 +10,10 @@ end
 
 function OutputWriter:WriteFormat(str,...)
     self:Write(str:format(...))
+end
+
+function OutputWriter:WriteColorFormat(col,str,...)
+    self:WriteColor(col,str:format(...))
 end
 
 function OutputWriter:WriteColor(col,...)

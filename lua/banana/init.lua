@@ -7,14 +7,14 @@ local function include(name)
 end
 
 -- STAGE 1
-banana = namespace.Define("banana")
+include("/banana/banana.lua")
 banana.isGMod = gmod and true
 
 include("/banana/timer/cpu.lua")
 include("/banana/io/outputwriter.lua")
 include("/banana/io/logger.lua")
 
-banana.Logger = namespace.New "Logger"
+banana.Logger = banana.New "Logger"
 banana.Logger:SetTag("banana")
 
 banana.Logger:Log("Initialising...")

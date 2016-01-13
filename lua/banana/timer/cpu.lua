@@ -1,4 +1,4 @@
-local CPUTimer = namespace.Define("CPUTimer")
+local CPUTimer = banana.Define("CPUTimer")
 
 function CPUTimer:GetTime()
     if banana.isGMod then

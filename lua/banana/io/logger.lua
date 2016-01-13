@@ -1,8 +1,16 @@
-local Logger = namespace.Define("Logger"):Extends("OutputWriter")
+local Logger = banana.Define("Logger"):Extends("OutputWriter")
 
 Logger.TAG = "LoggerBase"
-Logger.CPUTimer = namespace.New "CPUTimer"
+Logger.CPUTimer = banana.New "CPUTimer"
 Logger.StartTime = Logger.CPUTimer:GetTime()
+
+Logger.colors = {
+    red = Color and Color(255,0,0),
+    green = Color and Color(0,255,0),
+    blue = Color and Color(0,0,255),
+    yellow = Color and Color(0,255,255),
+    white = Color and Color(255,255,255)
+}
 
 function Logger:SetTag(tag)
     self.TAG = tag
@@ -13,30 +21,30 @@ function Logger:GetTimeDelta()
 end
 
 function Logger:Log(...)
-    self:Write("[")
-    self:Write(self.TAG)
-    self:Write("] ")
-    self:Write("[OUT] ")
-    self:WriteFormat("[T+%02.03fs] ",self:GetTimeDelta())
-    self:WriteN(...)
+    self:WriteColor(self.colors.green,"[")
+    self:WriteColor(self.colors.green,self.TAG)
+    self:WriteColor(self.colors.green,"] ")
+    self:WriteColor(self.colors.green,"[OUT] ")
+    self:WriteColorFormat(self.colors.green,"[T+%02.03fs] ",self:GetTimeDelta())
+    self:WriteColorN(self.colors.white,...)
 end
 
 function Logger:LogDebug(...)
-    self:Write("[")
-    self:Write(self.TAG)
-    self:Write("] ")
-    self:Write("[DBG] ")
-    self:WriteFormat("[%02.03f] ",self:GetTimeDelta())
-    self:WriteN(...)
+    self:WriteColor(self.colors.yellow,"[")
+    self:WriteColor(self.colors.yellow,self.TAG)
+    self:WriteColor(self.colors.yellow,"] ")
+    self:WriteColor(self.colors.yellow,"[DBG] ")
+    self:WriteColorFormat(self.colors.yellow,"[%02.03f] ",self:GetTimeDelta())
+    self:WriteColorN(self.colors.white,...)
 end
 
 function Logger:LogError(...)
-    self:Write("[")
-    self:Write(self.TAG)
-    self:Write("] ")
-    self:Write("[ERR] ")
-    self:WriteFormat("[%02.03f] ",self:GetTimeDelta())
-    self:WriteN(...)
+    self:WriteColor(self.colors.red,"[")
+    self:WriteColor(self.colors.red,self.TAG)
+    self:WriteColor(self.colors.red,"] ")
+    self:WriteColor(self.colors.red,"[ERR] ")
+    self:WriteColorFormat(self.colors.red,"[%02.03f] ",self:GetTimeDelta())
+    self:WriteColorN(self.colors.white,...)
 end
 
 function Logger:__tostring()
