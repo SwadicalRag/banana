@@ -42,6 +42,7 @@ banana.Loader:LoadFolder("/autobanana/")
 banana.Loader:LoadFolder("/autobanana/shared/")
 if SERVER then
     banana.Loader:LoadFolder("/autobanana/server/",true)
+    banana.Loader:ShareFolder("/autobanana/client/")
 else
     banana.Loader:LoadFolder("/autobanana/client/")
 end

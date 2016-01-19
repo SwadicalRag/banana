@@ -19,6 +19,12 @@ function Loader:IsLoaded(path)
     return self.Loaded[path] or false
 end
 
+function Loader:ShareFile(path,csl_override)
+    if banana.isGMod and (csl_override ~= true) then
+        AddCSLuaFile(path:sub(2,-1))
+    end
+end
+
 function Loader:LoadFile(path,csl_override)
     if self:IsLoaded(path) then return end
     self.Logger:LogDebug("Loading "..path.."...")
@@ -27,10 +33,8 @@ function Loader:LoadFile(path,csl_override)
         bFS:RunFile(path)
     else
         include(path:sub(2,-1))
-        if not csl_override then
-            AddCSLuaFile(path:sub(2,-1))
-        end
     end
+    self:ShareFile(path,csl_override)
 end
 
 function Loader:LoadFolder(path,csl_override) -- path ends with /
@@ -50,5 +54,25 @@ function Loader:LoadFolderRecursive(path,csl_override) -- path ends with /
 
     for _,folderName in ipairs(folders) do
         self:LoadFolderRecursive(path..folderName.."/")
+    end
+end
+
+function Loader:ShareFolder(path,csl_override) -- path ends with /
+    local files,folders = file.Find(path:sub(2,-1).."*","LUA")
+
+    for _,fileName in ipairs(files) do
+        self:ShareFile(path..fileName,csl_override)
+    end
+end
+
+function Loader:ShareFolderRecursive(path,csl_override) -- path ends with /
+    local files,folders = file.Find(path:sub(2,-1).."*","LUA")
+
+    for _,fileName in ipairs(files) do
+        self:ShareFile(path..fileName,csl_override)
+    end
+
+    for _,folderName in ipairs(folders) do
+        self:ShareFolderRecursive(path..folderName.."/")
     end
 end
