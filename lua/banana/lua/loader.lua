@@ -34,7 +34,7 @@ function Loader:LoadFile(path,csl_override)
 end
 
 function Loader:LoadFolder(path,csl_override) -- path ends with /
-    local files,folders = file.Find("lua/"..path.."*","GAME")
+    local files,folders = file.Find(path:sub(2,-1).."*","LUA")
 
     for _,fileName in ipairs(files) do
         self:LoadFile(path..fileName,csl_override)
@@ -42,7 +42,7 @@ function Loader:LoadFolder(path,csl_override) -- path ends with /
 end
 
 function Loader:LoadFolderRecursive(path,csl_override) -- path ends with /
-    local files,folders = file.Find("lua/"..path.."*","GAME")
+    local files,folders = file.Find(path:sub(2,-1).."*","LUA")
 
     for _,fileName in ipairs(files) do
         self:LoadFile(path..fileName,csl_override)

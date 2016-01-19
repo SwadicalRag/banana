@@ -3,12 +3,17 @@ local function include(name)
         bFS:RunFile(name)
     else
         _G.include(name:sub(2,-1))
+        AddCSLuaFile(name:sub(2,-1))
     end
 end
 
 -- STAGE 1
 include("/banana/banana.lua")
 banana.isGMod = gmod and true
+
+if banana.isGMod then
+    AddCSLuaFile()
+end
 
 include("/banana/timer/cpu.lua")
 include("/banana/io/outputwriter.lua")
