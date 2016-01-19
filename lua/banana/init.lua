@@ -34,10 +34,10 @@ banana.Loader:LoadFolderRecursive("/banana/")
 banana.Logger:Log("banana has successfully been planted!")
 
 banana.Loader:LoadFolder("/autobanana/")
-banana.Loader:LoadFolder("/autobanana/shared")
+banana.Loader:LoadFolder("/autobanana/shared/")
 if SERVER then
-    banana.Loader:LoadFolder("/autobanana/server",true)
+    banana.Loader:LoadFolder("/autobanana/server/",true)
 else
-    banana.Loader:LoadFolder("/autobanana/client")
+    banana.Loader:LoadFolder("/autobanana/client/")
 end
 banana.Logger:Log("autobanana load complete!")
