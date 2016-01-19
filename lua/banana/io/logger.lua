@@ -1,6 +1,7 @@
-local Logger = banana.Define("Logger"):Extends("OutputWriter")
+local Logger = banana.Define("Logger")
 
 function Logger:__ctor()
+    self:Extends("OutputWriter")
     self.TAG = "LoggerBase"
     self.CPUTimer = banana.New "CPUTimer"
     self.StartTime = self.CPUTimer:GetTime()
