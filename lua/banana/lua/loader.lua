@@ -19,7 +19,7 @@ function Loader:IsLoaded(path)
     return self.Loaded[path] or false
 end
 
-function Loader:LoadFile(path)
+function Loader:LoadFile(path,csl_override)
     if self:IsLoaded(path) then return end
     self.Logger:LogDebug("Loading "..path.."...")
     self:SetLoaded(path,true)
@@ -27,23 +27,25 @@ function Loader:LoadFile(path)
         bFS:RunFile(path)
     else
         include(path:sub(2,-1))
-        AddCSLuaFile(path:sub(2,-1))
+        if not csl_override then
+            AddCSLuaFile(path:sub(2,-1))
+        end
     end
 end
 
-function Loader:LoadFolder(path) -- path ends with /
+function Loader:LoadFolder(path,csl_override) -- path ends with /
     local files,folders = file.Find("lua/"..path.."*","GAME")
 
     for _,fileName in ipairs(files) do
-        self:LoadFile(path..fileName)
+        self:LoadFile(path..fileName,csl_override)
     end
 end
 
-function Loader:LoadFolderRecursive(path) -- path ends with /
+function Loader:LoadFolderRecursive(path,csl_override) -- path ends with /
     local files,folders = file.Find("lua/"..path.."*","GAME")
 
     for _,fileName in ipairs(files) do
-        self:LoadFile(path..fileName)
+        self:LoadFile(path..fileName,csl_override)
     end
 
     for _,folderName in ipairs(folders) do
