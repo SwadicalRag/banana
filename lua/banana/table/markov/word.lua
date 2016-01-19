@@ -44,7 +44,7 @@ function MarkovWord:GetChild(string)
 end
 
 function MarkovWord:GetRandomChild()
-    local target,current = math.random(1,self.totalFrequency),0
+    local target,current = math.random(1,math.max(self.totalFrequency,1)),0
 
     for i=1,#self.children do
         current = current + self.childrenFrequency[self.children[i]:GetString()]

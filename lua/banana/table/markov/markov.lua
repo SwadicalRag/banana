@@ -1,41 +1,66 @@
 local MarkovChain = banana.Define("MarkovChain")
 
 function MarkovChain:__ctor()
+    self.defaultDepth = 3
+
     self.firstWords = {}
     self.firstWordsLookup = {}
     self.firstWordFrequencies = {}
     self.totalFirstWordFrequency = 0
+    self.realFirstWords = {}
+    self.realFirstWordsLookup = {}
+    self.realFirstWordFrequencies = {}
+    self.totalRealFirstWordFrequency = 0
 end
 
-function MarkovChain:Learn(sentence)
+function MarkovChain:Learn(sentence,notFirst,noRecurse)
     local currentWord
     for word in sentence:gmatch("%S+") do
         if currentWord then
             currentWord = currentWord:AddChildString(word)
         else
-            if self.firstWordsLookup[word] then
-                currentWord = self.firstWordsLookup[word]
-            else
-                currentWord = banana.New("MarkovWord")
-                currentWord:SetString(word)
-                self.firstWords[#self.firstWords+1] = currentWord
-                self.firstWordFrequencies[word] = 0
-                self.firstWordsLookup[word] = currentWord
-            end
+            if notFirst then
+                if self.firstWordsLookup[word] then
+                    currentWord = self.firstWordsLookup[word]
+                else
+                    currentWord = banana.New("MarkovWord")
+                    currentWord:SetString(word)
+                    self.firstWords[#self.firstWords+1] = currentWord
+                    self.firstWordFrequencies[word] = 0
+                    self.firstWordsLookup[word] = currentWord
+                end
 
-            self.totalFirstWordFrequency = self.totalFirstWordFrequency + 1
-            self.firstWordFrequencies[word] = self.firstWordFrequencies[word] + 1
+                self.totalFirstWordFrequency = self.totalFirstWordFrequency + 1
+                self.firstWordFrequencies[word] = self.firstWordFrequencies[word] + 1
+            else
+                if self.realFirstWordsLookup[word] then
+                    currentWord = self.realFirstWordsLookup[word]
+                else
+                    currentWord = banana.New("MarkovWord")
+                    currentWord:SetString(word)
+                    self.realFirstWords[#self.realFirstWords+1] = currentWord
+                    self.realFirstWordFrequencies[word] = 0
+                    self.realFirstWordsLookup[word] = currentWord
+                end
+
+                self.totalRealFirstWordFrequency = self.totalRealFirstWordFrequency + 1
+                self.realFirstWordFrequencies[word] = self.realFirstWordFrequencies[word] + 1
+
+                self:Learn(sentence,true,true)
+            end
         end
     end
 
-    local oneWordLessSentence = sentence:match("%S+%s+(.+)")
-    if oneWordLessSentence and (oneWordLessSentence ~= "") then
-        self:Learn(oneWordLessSentence)
+    if not noRecurse then
+        local oneWordLessSentence = sentence:match("%S+%s+(.+)")
+        if oneWordLessSentence and (oneWordLessSentence ~= "") then
+            self:Learn(oneWordLessSentence,true)
+        end
     end
 end
 
 function MarkovChain:GetRandomFirstWord()
-    local target,current = math.random(1,self.totalFirstWordFrequency),0
+    local target,current = math.random(1,math.max(self.totalFirstWordFrequency,1)),0
 
     for i=1,#self.firstWords do
         current = current + self.firstWordFrequencies[self.firstWords[i]:GetString()]
@@ -45,18 +70,29 @@ function MarkovChain:GetRandomFirstWord()
     return false
 end
 
+function MarkovChain:GetRandomRealFirstWord()
+    local target,current = math.random(1,math.max(self.totalRealFirstWordFrequency,1)),0
+
+    for i=1,#self.realFirstWords do
+        current = current + self.realFirstWordFrequencies[self.realFirstWords[i]:GetString()]
+        if current >= target then return self.realFirstWords[i] end
+    end
+
+    return false
+end
+
 function MarkovChain:resetWordChain(wordChain)
     local newWordChain = {}
 
+    table.remove(wordChain,1)
+
     for i,word in ipairs(wordChain) do
-        if i == 1 then
+        if #newWordChain == 0 then
             newWordChain[1] = self.firstWordsLookup[wordChain[1]:GetString()]
         else
             newWordChain[#newWordChain+1] = newWordChain[#newWordChain]:GetChild(wordChain[i]:GetString())
         end
     end
-
-    table.remove(newWordChain,1)
 
     return newWordChain
 end
@@ -67,8 +103,8 @@ function MarkovChain:Generate(start,maxLength,depth)
     if start then
         for word in start:gmatch("%S+") do
             if #outputChain == 0 then
-                if self.firstWordsLookup[word] then
-                    wordChain[1] = self.firstWordsLookup[word]
+                if self.realFirstWordsLookup[word] then
+                    wordChain[1] = self.realFirstWordsLookup[word]
                     outputChain[1] = word
                 else
                     return start
@@ -84,12 +120,12 @@ function MarkovChain:Generate(start,maxLength,depth)
                 end
             end
 
-            if #wordChain > (depth or 2) then
+            if #wordChain >= (depth or self.defaultDepth) then
                 wordChain = self:resetWordChain(wordChain)
             end
         end
     else
-        wordChain[1] = self:GetRandomFirstWord()
+        wordChain[1] = self:GetRandomRealFirstWord()
         outputChain[1] = wordChain[1]:GetString()
     end
 
@@ -103,7 +139,7 @@ function MarkovChain:Generate(start,maxLength,depth)
             break
         end
 
-        if #wordChain >= (depth or 2) then
+        if #wordChain >= (depth or self.defaultDepth) then
             wordChain = self:resetWordChain(wordChain)
         end
 

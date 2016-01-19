@@ -68,6 +68,12 @@ function banana.New(name)
     return instance
 end
 
+function banana.Peel()
+    local peel = copy(banana)
+    peel.Classes = {}
+    return peel
+end
+
 banana.Clone = copy
 
 return banana
