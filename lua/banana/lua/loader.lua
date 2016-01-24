@@ -38,26 +38,52 @@ function Loader:LoadFile(path,csl_override)
 end
 
 function Loader:LoadFolder(path,csl_override) -- path ends with /
-    local files,folders = file.Find(path:sub(2,-1).."*","LUA")
+    if bFS then
+        local exists,isfolder = bFS:Exists(path:sub(1,-2))
+        if not exists or not isfolder then return end
+        bFS:ChangeDir(path)
+        for _,fileName in ipairs(bFS:Files()) do
+            self:LoadFile(path..fileName)
+        end
+        bFS:ChangeDir("/")
+    else
+        local files,folders = file.Find(path:sub(2,-1).."*","LUA")
 
-    for _,fileName in ipairs(files) do
-        self:LoadFile(path..fileName,csl_override)
+        for _,fileName in ipairs(files) do
+            self:LoadFile(path..fileName,csl_override)
+        end
     end
 end
 
 function Loader:LoadFolderRecursive(path,csl_override) -- path ends with /
-    local files,folders = file.Find(path:sub(2,-1).."*","LUA")
+    if bFS then
+        local exists,isfolder = bFS:Exists(path:sub(1,-2))
+        if not exists or not isfolder then return end
+        bFS:ChangeDir(path)
+        for _,fileName in ipairs(bFS:Files()) do
+            self:LoadFile(path..fileName)
+        end
 
-    for _,fileName in ipairs(files) do
-        self:LoadFile(path..fileName,csl_override)
-    end
+        for _,folderName in ipairs(bFS:Folders()) do
+            self:LoadFolderRecursive(path..folderName.."/")
+        end
+        bFS:ChangeDir("/")
+    else
+        local files,folders = file.Find(path:sub(2,-1).."*","LUA")
 
-    for _,folderName in ipairs(folders) do
-        self:LoadFolderRecursive(path..folderName.."/")
+        for _,fileName in ipairs(files) do
+            self:LoadFile(path..fileName,csl_override)
+        end
+
+        for _,folderName in ipairs(folders) do
+            self:LoadFolderRecursive(path..folderName.."/")
+        end
     end
 end
 
 function Loader:ShareFolder(path,csl_override) -- path ends with /
+    if bFS then return end
+    if not banana.isGMod then return end
     local files,folders = file.Find(path:sub(2,-1).."*","LUA")
 
     for _,fileName in ipairs(files) do
@@ -66,6 +92,8 @@ function Loader:ShareFolder(path,csl_override) -- path ends with /
 end
 
 function Loader:ShareFolderRecursive(path,csl_override) -- path ends with /
+    if bFS then return end
+    if not banana.isGMod then return end
     local files,folders = file.Find(path:sub(2,-1).."*","LUA")
 
     for _,fileName in ipairs(files) do
