@@ -5,12 +5,18 @@ local tostring = tostring
 local getmetatable = getmetatable
 local setmetatable = setmetatable
 
-local banana = {}
+banana = {}
 local BANANA_NAMESPACE,BANANA_CLASS = 0,1
 
 banana.Protected = {
     Extends = true,
-    GetName = true
+    GetInternalClassName = true
+}
+
+banana.IgnoreKeys = {
+    __ctor = true,
+    __tostring = true,
+    __gc = true
 }
 
 local function copy(source,lookup)
@@ -35,6 +41,10 @@ function banana.__new(enum)
     })
 end
 
+function banana.__is(tbl,enum)
+    return getmetatable(tbl) and getmetatable(tbl).__banana == enum
+end
+
 banana.RootNamespace = banana.__new(BANANA_NAMESPACE)
 
 function banana.resolveNamespace(name)
@@ -44,7 +54,7 @@ function banana.resolveNamespace(name)
     for chunk,sep in string.gmatch(name,"([A-Za-z0-9]+)(:+)") do
         if sep and sep ~= "::" then error("Bad namespace separation convention "..sep) end
         namespace[chunk] = namespace[chunk] or banana.__new(BANANA_NAMESPACE)
-        if not banana.is(namespace[chunk],BANANA_NAMESPACE) then error("Namespace "..name.." passes through a class!") end
+        if not banana.__is(namespace[chunk],BANANA_NAMESPACE) then error("Namespace "..name.." passes through a class!") end
         namespace = namespace[chunk]
     end
 
@@ -58,7 +68,7 @@ function banana.resolveNamespaceEx(name)
     for chunk,sep in string.gmatch(name,"([A-Za-z0-9]+)(:*)") do
         if sep and sep ~= "::" and sep ~= "" then break end
         namespace[chunk] = namespace[chunk] or banana.__new(BANANA_NAMESPACE)
-        if not banana.is(namespace[chunk],BANANA_NAMESPACE) then error("Namespace "..name.." passes through a class!") end
+        if not banana.__is(namespace[chunk],BANANA_NAMESPACE) then error("Namespace "..name.." passes through a class!") end
         namespace = namespace[chunk]
     end
 
@@ -79,12 +89,12 @@ function banana.Define(fullname)
         end
     end
 
-    local space,name = banana.resolveNamespace(name)
+    local space,name = banana.resolveNamespace(fullname)
 
     local class = setmetatable({},classMeta)
     space[name] = class
 
-    function class:GetName()
+    function class:GetInternalClassName()
         return fullname
     end
 
@@ -100,15 +110,17 @@ function banana.Define(fullname)
     end
 
     function classMeta:__newindex(k,v)
-        assert(banana.Protected[k],"Cannot modify protected member '"..k.."'")
+        assert(not banana.Protected[k],"Cannot modify protected member '"..k.."'")
         rawset(self,k,v)
     end
 
     return class
 end
 
-function banana.New(name)
-    assert(space[name],"Class "..tostring(name).." does not exist!")
+function banana.New(fullname)
+    local space,name = banana.resolveNamespace(fullname)
+
+    assert(space[name],"Class "..tostring(fullname).." does not exist!")
     local instance = copy(space[name])
 
     setmetatable(instance,{
@@ -149,6 +161,20 @@ function banana.PrintNamespace(namespace,depth,prepend,ntype)
             end
         elseif type(v) == "function" then
             print(indent..prepend..k.." -> Method")
+        end
+    end
+end
+
+function banana.forEachClass(cb,namespace)
+    namespace = (((type(namespace) == "string") and banana.resolveNamespaceEx(namespace)) or namespace) or banana.RootNamespace
+
+    for k,v in pairs(namespace) do
+        if type(v) == "table" then
+            if banana.__is(v,BANANA_CLASS) then
+                cb(v)
+            elseif banana.__is(v,BANANA_NAMESPACE) then
+                banana.forEachClass(cb,v)
+            end
         end
     end
 end
