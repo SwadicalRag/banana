@@ -2,7 +2,7 @@ local type = type
 local pairs = pairs
 local assert = assert
 local tostring = tostring
-local getmetatable = getmetatable
+local getmetatable = debug and debug.getmetatable or getmetatable
 local setmetatable = setmetatable
 
 banana = {}
@@ -10,7 +10,8 @@ local BANANA_NAMESPACE,BANANA_CLASS = 0,1
 
 banana.Protected = {
     Extends = true,
-    GetInternalClassName = true
+    GetInternalClassName = true,
+    __meta = true
 }
 
 banana.IgnoreKeys = {
@@ -19,7 +20,7 @@ banana.IgnoreKeys = {
     __gc = true
 }
 
-local function copy(source,lookup)
+local function copy(source,doMeta,lookup)
     lookup = lookup or {}
     if type(source) ~= "table" then return source end
     if lookup[source] then return lookup[source] end
@@ -27,10 +28,12 @@ local function copy(source,lookup)
     lookup[source] = target
 
     for key,value in pairs(source) do
-        target[copy(key,lookup)] = copy(value,lookup)
+        target[copy(key,doMeta,lookup)] = copy(value,doMeta,lookup)
     end
 
-    setmetatable(target,copy(getmetatable(source)) or {})
+    if doMeta ~= false then
+        setmetatable(target,copy(getmetatable(source),true,lookup) or {})
+    end
 
     return target
 end
@@ -76,23 +79,26 @@ function banana.resolveNamespaceEx(name)
 end
 
 function banana.Define(fullname)
+    local class = {}
     local classMeta = {}
+    class.__meta = classMeta
     classMeta.__banana = BANANA_CLASS
+    classMeta.__extends = {}
 
     function classMeta:__tostring()
         return "Base Class "..fullname
     end
-    classMeta.__extends = {}
+
     function classMeta:__index(k)
         for _,parentClass in ipairs(classMeta.__extends) do
             if parentClass[k] then return parentClass[k] end
         end
     end
 
-    local space,name = banana.resolveNamespace(fullname)
-
-    local class = setmetatable({},classMeta)
-    space[name] = class
+    function classMeta:__newindex(k,v)
+        assert(not banana.Protected[k],"Cannot modify protected member '"..k.."'")
+        rawset(self,k,v)
+    end
 
     function class:GetInternalClassName()
         return fullname
@@ -109,10 +115,10 @@ function banana.Define(fullname)
         return class
     end
 
-    function classMeta:__newindex(k,v)
-        assert(not banana.Protected[k],"Cannot modify protected member '"..k.."'")
-        rawset(self,k,v)
-    end
+    local space,name = banana.resolveNamespace(fullname)
+
+    setmetatable(class,classMeta)
+    space[name] = class
 
     return class
 end
@@ -121,19 +127,20 @@ function banana.New(fullname)
     local space,name = banana.resolveNamespace(fullname)
 
     assert(space[name],"Class "..tostring(fullname).." does not exist!")
-    local instance = copy(space[name])
+    local instance = copy(space[name],false)
 
-    setmetatable(instance,{
-        __tostring = function(self)
-            if self.__tostring then
-                return self:__tostring()
-            else
-                return "Class Instance "..name
-            end
-        end,
-        __gc = instance.__gc,
-        __concat = instance.__concat
-    })
+    local meta = instance.__meta
+    meta.__gc = meta.__tostring or instance.__gc
+    meta.__concat = meta.__tostring or instance.__concat
+    meta.__tostring = meta.__tostring or instance.__tostring
+    instance.__meta = nil
+    setmetatable(instance,meta)
+
+    for _,parentClass in ipairs(meta.__extends) do
+        if parentClass.__ctor then
+            parentClass.__ctor(instance)
+        end
+    end
 
     if instance.__ctor then instance:__ctor() end
 
