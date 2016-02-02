@@ -2,6 +2,8 @@ local type = type
 local pairs = pairs
 local assert = assert
 local tostring = tostring
+local rawget = rawget
+local rawset = rawset
 local getmetatable = debug and debug.getmetatable or getmetatable
 local setmetatable = setmetatable
 
@@ -90,8 +92,9 @@ function banana.Define(fullname)
     end
 
     function classMeta:__index(k)
+        if rawget(class,k) ~= nil then return rawget(class,k) end
         for _,parentClass in ipairs(classMeta.__extends) do
-            if parentClass[k] then return parentClass[k] end
+            if parentClass[k] ~= nil then return parentClass[k] end
         end
     end
 
@@ -123,24 +126,29 @@ function banana.Define(fullname)
     return class
 end
 
-function banana.New(fullname)
-    local space,name = banana.resolveNamespace(fullname)
-
-    assert(space[name],"Class "..tostring(fullname).." does not exist!")
-    local instance = copy(space[name],false)
-
-    local meta = instance.__meta
-    meta.__gc = meta.__tostring or instance.__gc
-    meta.__concat = meta.__tostring or instance.__concat
-    meta.__tostring = meta.__tostring or instance.__tostring
-    instance.__meta = nil
-    setmetatable(instance,meta)
-
+function banana.InitialiseDependencies(instance,meta)
     for _,parentClass in ipairs(meta.__extends) do
         if parentClass.__ctor then
             parentClass.__ctor(instance)
         end
+        banana.InitialiseDependencies(instance,getmetatable(parentClass))
     end
+end
+
+function banana.New(fullname)
+    local space,name = banana.resolveNamespace(fullname)
+
+    assert(space[name],"Class "..tostring(fullname).." does not exist!")
+    local instance = {}
+    local meta = space[name].__meta
+
+    meta.__gc = meta.__gc or instance.__gc
+    meta.__concat = meta.__concat or instance.__concat
+    meta.__tostring = meta.__tostring or instance.__tostring
+
+    setmetatable(instance,meta)
+
+    banana.InitialiseDependencies(instance,meta)
 
     if instance.__ctor then instance:__ctor() end
 
